@@ -110,7 +110,7 @@ def define_aerosol_type(aeronet_aod675, aeronet_aod440, sixs_param):
     return outputs
 
 
-if __name__ == '__main__':
+if __name__ == '__main__1':
     """
     复现李兆麟等，2019，利用6S模型的自定义气溶胶类型反演北京地区气溶胶光学厚度
     确定北京地区气溶胶类型的实验
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     mod021km_red_img = mod021km_ds.GetRasterBand(1).ReadAsArray()   # 红色波段
     mod021km_nir_img = mod021km_ds.GetRasterBand(2).ReadAsArray()   # 近红外波段
     mod09_red_img = mod09_ds.GetRasterBand(1).ReadAsArray()
-    mod09_nir_img = mod09_ds.GetRasterBand(1).ReadAsArray()
+    mod09_nir_img = mod09_ds.GetRasterBand(2).ReadAsArray()
     vza_img = geometries_ds.GetRasterBand(1).ReadAsArray()
     vaa_img = geometries_ds.GetRasterBand(2).ReadAsArray()
     sza_img = geometries_ds.GetRasterBand(3).ReadAsArray()
@@ -191,3 +191,28 @@ if __name__ == '__main__':
     res = define_aerosol_type(Beijing_CAMS_aod675, Beijing_CAMS_aod440, modis_config)
     # 存储结果
     pickle.dump(res, open(r'F:\Experiment\China Aerosol Type\Beijing_CAMS_20170918_nir_band.txt', 'wb'))
+
+
+if __name__ == '__main__':
+    import os
+    import pickle
+
+    os.chdir(r'F:\Experiment\China Aerosol Type')
+    red_band_file = 'Beijing_CAMS_20170918_red_band.txt'
+    nir_band_file = 'Beijing_CAMS_20170918_nir_band.txt'
+
+    with open(red_band_file, "rb") as red_band:
+        red_band_res = pickle.load(red_band)
+
+    with open(nir_band_file, "rb") as nir_band:
+        nir_band_res = pickle.load(nir_band)
+
+    res = []
+    pbar = tqdm(total=len(red_band_res))
+    for i in range(len(red_band_res)):
+        err = red_band_res[i][2] + (nir_band_res[i][0] - 0.1357945999431777) ** 2
+        res.append((err, red_band_res[i][3:]))
+        pbar.update(1)
+    # 按照误差的大小排序
+    res.sort(key=lambda x: x[0], reverse=False)
+    print(res[0])
